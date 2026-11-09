@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" href="styles/style.css"/>
+  <title>RPS</title>
+  <meta name="viewport"
+    content="width=device-width,initial-scale=1.0">
+  <style>
+  :root {
+  --bg: #F8F9FA;
+  --rock: #FF9AA2;
+  --paper: #B5EAD7;
+  --scissors: #C7CEEA;
+  --text: #2D3436;
+  --card: #FFFFFF;
+  --win: #B5EAD7;
+  --lose: #FF9AA2;
+  --accent:#B5F5F5;
+}
+
+body{
+  background:var(--bg);
+  text-align:center;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color: var(--text);
+  min-height:100dvh;
+  padding:10px;
+}
+  *{    box-sizing: border-box;
+  margin:0;
+  padding:0;
+  }
+  main{
+    background:var(--card);
+    box-shadow:0px 0px 20px var(--accent);
+    padding:20px;
+    
+  }
+  .button-card{
+    box-shadow:0px 0px 20px var(--accent);
+    border-radius:8px;
+    margin-top:10px;
+    padding:10px;
+  }
+  .buttons-card{
+    box-shadow:0px 0px 20px var(--accent);
+    margin: 15px 10px;
+    padding-top :15px;
+    padding-bottom:15px;
+    display:flex;
+    justify-content:space-around;
+    grid-area:play;
+  }
+  button{
+    border:none;
+    width:80px;
+    padding:5px 2px;
+    border-radius:12px;
+    font-weight:bold;
+  }
+  #rock{
+    background:var(--rock);
+  }
+   #paper{
+    background:var(--paper);
+  }
+   #scissors{
+    background:var(--scissors);
+  }
+   #autoplay{
+    background:var(--accent);
+  }
+  
+  .moves-card{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    margin-top:20px;
+    margin-bottom:20px;
+    gap:15px;
+    box-shadow:0px 0px 20px var(--accent);
+    padding-top:15px;
+    padding-bottom:15px;
+    grid-area:result;
+  }
+  
+  .result-card{
+    box-shadow:0px 0px 20px var(--accent);
+    padding-top:15px;
+    padding-bottom:15px;
+    font-weight:bold;
+    grid-area:move;
+  }
+  .score-card{
+    box-shadow:0px 0px 20px var(--accent);
+    margin-top:10px;
+    padding-left:10px;
+    padding-right:10px;
+    padding-bottom:10px;
+    grid-area:score;
+  }
+  .scores-container{
+     box-shadow:0px 0px 20px var(--accent);
+    margin-top:10px;
+    margin-bottom:10px;
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:5px;
+    padding-top:15px;
+    padding-bottom:15px;
+  }
+  .wins{
+    color:var(--win);
+    font-weight:bold;
+  }
+    .loses{
+    color:var(--lose);
+  }
+  #reset{
+    background:var(--rock);
+  }
+  @media(min-width:800px){
+    .moves-card,  .button-card{
+      margin:0px;
+    }
+    
+    main{
+     display:grid;
+      grid-template-columns:1fr 1fr;
+      grid-template-rows:auto auto auto auto;
+      grid-template-areas:
+      "heading heading"
+      "play result"
+      "move move"
+      "score score";
+      gap:20px;
+      justify-content:center;
+    }
+    
+    
+  }
+  
+  
+  </style>
+  
+</head>
+<body>
+  <main>  
+    
+  <h1 style="grid-area:heading;">
+    Rock Paper Scissors
+  </h1>
+    
+  <div class="button-card">
+    <p>pick your move</p>
+    <div class="buttons-card">
+      <button id="rock">rock</button>
+      <button id="paper">paper</button>
+      <button id="scissors">scissors</button>
+    </div>
+    <button id="autoplay">AutoPlay</button>
+  </div>
+  
+  <div class="moves-card">
+    <h3>you</h3>
+    <h3>computer</h3>
+    <p class="pmove">pmove</p>
+    <p class="cmove">cmove</p>
+  </div>
+  
+  <div class="result-card"><p id="result">result player or computer</p></div>
+  
+  <div class="score-card">
+    <h3>score</h3>
+    <div class="scores-container"> 
+      <p>wins</p>
+      <p>loses</p>
+      <p>draws</p>
+      <p class="wins"></p>
+      <p class="loses"></p>
+      <p class="draws"></p>
+    </div>
+    <button id ="reset">reset score</button>
+  </div>
+    </main>
+    
+  
+  <script>
+  
+  const rockBtn = document.getElementById("rock");
+  const paperBtn = document.getElementById("paper");
+  const scissorsBtn = document.getElementById("scissors");
+  
+  const resetBtn = document.getElementById("reset");
+  const autoplayBtn = document.getElementById("autoplay");
+  
+  const pmoveElm = document.querySelector(".pmove");
+  const cmoveElm = document.querySelector(".cmove");
+  const resultElm = document.getElementById("result");
+  
+  const winsElm = document.querySelector(".wins");
+  const losesElm = document.querySelector(".loses");
+  const drawsElm = document.querySelector(".draws");
+  
+  let iid;
+  let isAuto = false;
+  
+  
+ let score = {
+    wins:0,
+    loses:0,
+    draws:0
+  };
+  load();
+  
+  renderScore();
+  
+  rockBtn.onclick = function (){play(rockBtn);}
+  paperBtn.onclick = function (){play(paperBtn);}
+  scissorsBtn.onclick = function (){play(scissorsBtn);}
+  autoplayBtn.onclick = function (){ autoPlay();}
+  resetBtn.onclick = function(){ resetScore();}
+  
+   function play(btn){
+    let pm = getPlayerMove(btn);
+    let cm = generateMove();
+    
+    let result = getResult(pm,cm);
+    render();
+     
+     function render(){
+    pmoveElm.innerText = pm;
+    cmoveElm.innerText = cm;
+    resultElm.innerText = result;
+  }
+     renderScore();
+     save();
+  }
+  
+  function generateMove(){
+    let a = Math.random();
+    if(a<1/3){
+      return "rock";
+    }else if(a<2/3){
+      return "paper";
+    }else{
+      return "scissors";
+    }
+  }
+   
+  function getPlayerMove(movebtn){
+    return movebtn.innerText;
+  }
+  
+  function getResult(p,c){
+    if(p===c){
+     score.draws+=1;
+    return "is a draw";}
+    if(p==='paper' && c==="rock"){
+      score.wins+=1;
+    return 'Player Wins';}
+    if(p==='rock' && c==="scissors"){
+      score.wins+=1;
+    return "Player Wins";}
+    if(p==='scissors' && c==="paper"){
+      score.wins+=1;
+    return "You Win";}
+    score.loses+=1;
+    return "Computer Wins";
+  }
+  
+  function autoPlay(){
+    
+    if(isAuto===false){
+  iid=  setInterval(function(){
+    let pm = generateMove();
+    let cm = generateMove();
+    
+    let result = getResult(pm,cm);
+    render();
+     
+     function render(){
+    pmoveElm.innerText = pm;
+    cmoveElm.innerText = cm;
+    resultElm.innerText = result;
+     }
+    renderScore();
+    save();
+      
+    },2000);
+     isAuto=true;
+      autoplayBtn.innerText = "StopAuto";
+    }else{
+      clearInterval(iid);
+      isAuto = false;
+      autoplayBtn.innerText = "AutoPlay";
+    }
+    
+  }
+  
+  function renderScore(){
+    winsElm.innerText=score.wins;
+    losesElm.innerText=score.loses;
+    drawsElm.innerText=score.draws;
+    
+  }
+  
+  function resetScore(){
+    score.wins=0;
+    score.loses=0;
+    score.draws=0; 
+    renderScore();
+    localStorage.clear();
+  }
+  function save(){
+    let scoreText = JSON.stringify(score);
+    localStorage.setItem("score",scoreText);
+  }
+  function load(){
+   let scoreText = localStorage.getItem("score");
+    if(scoreText){
+    score = JSON.parse(scoreText);}
+
+  }
+    
+  
+  
+  </script>
+  
+</body>
+</html>
+
+ 
